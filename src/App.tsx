@@ -25,53 +25,52 @@ type Story = {
 };
 
 type ItemProps = {
-  item: Story;
+  url: string;
+  title: string;
+  author: string;
+  num_comments: number;
+  points: number;
 };
 
 type ListProps = {
   list: Story[];
 };
 //creating list component
-const List = (props: ListProps) => (
+const List = ({ list }: ListProps) => (
   <ul>
-    {props.list.map((item) => (
-      <Item key={item.objectID} item={item} />
-      ))}
+    {list.map(({ objectID, ...item }) => (
+      <Item key={objectID} {...item} />
+    ))}
   </ul>
 );
 
 //creating item component
-const Item = (props: ItemProps) => {
+const Item = ({ url, title, author, num_comments, points }: ItemProps) => {
   return (
     <li>
       <span>
-        <a href={props.item.url}>{props.item.title}</a>
+        <a href={url}>{title}</a>
       </span>
-      <span>{props.item.author}</span>
-      <span>{props.item.num_comments}</span>
-      <span>{" Points: " + props.item.points}</span>
+      <span>{author}</span>
+      <span>{num_comments}</span>
+      <span>{" Points: " + points}</span>
     </li>
   );
 };
 
 //creating search component
-
 type SearchProp = {
-  onSearch : (event : React.ChangeEvent<HTMLInputElement>) => void
-}
-const Search = (props : SearchProp) => {
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-    props.onSearch(event);
-  };
-  return (
-    <>
-      <label htmlFor="search">Search: </label>
-      <input type="text" id="search" value={searchTerm} onChange={handleChange} />
-    </>
-  );
+  onSearch: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  search: string;
 };
+const Search = ({ onSearch, search }: SearchProp) => (
+  <>
+    <label htmlFor="search">Search: </label>
+    {/* Lifting state using callback handler  */}
+    <input type="text" id="search" onChange={onSearch} value={search} />
+  </>
+);
+
 const App = () => {
   const stories = [
     {
@@ -91,17 +90,23 @@ const App = () => {
       objectID: 1,
     },
   ];
-  const handleSearch = (event : React.ChangeEvent<HTMLInputElement>) => {
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
     console.log(event.target.value);
-  }
+  };
+
+  const filteredStories = stories.filter((story) =>
+    story.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   return (
     <>
       {/* <h1>Hello {title}</h1> */}
 
       <h1>Hello {getTitle("React")}</h1>
-      <Search onSearch = {handleSearch}/>
+      <Search onSearch={handleSearch} search={searchTerm} />
       <hr />
-      <List list={stories} />
+      <List list={filteredStories} />
     </>
   );
 };
