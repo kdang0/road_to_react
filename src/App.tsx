@@ -71,6 +71,15 @@ const Search = ({ onSearch, search }: SearchProp) => (
   </>
 );
 
+//creating custom hook
+const useStorageState= (key : string, initialState : string) => {
+  const [value, setValue] = React.useState(localStorage.getItem(key) || initialState);
+  React.useEffect(()=>{
+    localStorage.setItem(key, value);
+  }, [key,value]);
+  return [value, setValue] as const;
+}
+
 const App = () => {
   const stories = [
     {
@@ -90,7 +99,8 @@ const App = () => {
       objectID: 1,
     },
   ];
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = useStorageState('search', '');
+ 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
     console.log(event.target.value);
