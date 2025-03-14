@@ -59,17 +59,17 @@ const Item = ({ url, title, author, num_comments, points }: ItemProps) => {
 };
 
 //creating search component
-type SearchProp = {
-  onSearch: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  search: string;
-};
-const Search = ({ onSearch, search }: SearchProp) => (
-  <>
-    <label htmlFor="search">Search: </label>
-    {/* Lifting state using callback handler  */}
-    <input type="text" id="search" onChange={onSearch} value={search} />
-  </>
-);
+// type SearchProp = {
+//   onSearch: (event: React.ChangeEvent<HTMLInputElement>) => void;
+//   search: string;
+// };
+// const Search = ({ onSearch, search }: SearchProp) => (
+//   <>
+//     <label htmlFor="search">Search: </label>
+//     {/* Lifting state using callback handler  */}
+//     <input type="text" id="search" onChange={onSearch} value={search} />
+//   </>
+// );
 
 //creating custom hook
 const useStorageState= (key : string, initialState : string) => {
@@ -79,6 +79,27 @@ const useStorageState= (key : string, initialState : string) => {
   }, [key,value]);
   return [value, setValue] as const;
 }
+
+//reusable component
+type InputWithLabelProps = {
+  id: string;
+  label: string;
+  value: string;
+  type?: string;
+  onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+} 
+const InputWithLabel = ({
+  id, label, value, type = 'text', onInputChange
+}: InputWithLabelProps) => (
+  <>
+    <label htmlFor={id}>{label}</label>
+    &nbsp;
+    <input type={type} id={id} value={value} onChange={onInputChange} />
+  
+  </>
+) 
+
+
 
 const App = () => {
   const stories = [
@@ -114,7 +135,7 @@ const App = () => {
       {/* <h1>Hello {title}</h1> */}
 
       <h1>Hello {getTitle("React")}</h1>
-      <Search onSearch={handleSearch} search={searchTerm} />
+      <InputWithLabel id='search' label='Search' value={searchTerm} onInputChange={handleSearch}/>
       <hr />
       <List list={filteredStories} />
     </>
