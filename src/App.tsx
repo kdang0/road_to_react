@@ -24,36 +24,38 @@ type Story = {
   objectID: number;
 };
 
+
+
 type ItemProps = {
-  url: string;
-  title: string;
-  author: string;
-  num_comments: number;
-  points: number;
+  item: Story;
+  onRemoveItem: (item:Story) => void;
 };
 
 type ListProps = {
   list: Story[];
+  onRemoveItem: (item:Story) => void;
 };
 //creating list component
-const List = ({ list }: ListProps) => (
+const List = ({ list, onRemoveItem }: ListProps) => (
   <ul>
-    {list.map(({ objectID, ...item }) => (
-      <Item key={objectID} {...item} />
+    {list.map((item) => (
+      <Item key={item.objectID} onRemoveItem={onRemoveItem} item={item} />
     ))}
   </ul>
 );
 
 //creating item component
-const Item = ({ url, title, author, num_comments, points }: ItemProps) => {
+const Item = ({ item, onRemoveItem }: ItemProps) => {
+
   return (
     <li>
       <span>
-        <a href={url}>{title}</a>
+        <a href={item.url}>{item.title}</a>
       </span>
-      <span>{author}</span>
-      <span>{num_comments}</span>
-      <span>{" Points: " + points}</span>
+      <span>{item.author}</span>
+      <span>{item.num_comments}</span>
+      <span>{" Points: " + item.points}</span>
+      <button type="button" onClick={() => onRemoveItem(item)}>Dismiss</button>
     </li>
   );
 };
@@ -83,26 +85,47 @@ const useStorageState= (key : string, initialState : string) => {
 //reusable component
 type InputWithLabelProps = {
   id: string;
-  label: string;
+  children: React.ReactNode;
   value: string;
   type?: string;
   onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 } 
 const InputWithLabel = ({
-  id, label, value, type = 'text', onInputChange
+  id, children, value, type = 'text', onInputChange
 }: InputWithLabelProps) => (
   <>
-    <label htmlFor={id}>{label}</label>
+    <label htmlFor={id}>{children}</label>
     &nbsp;
     <input type={type} id={id} value={value} onChange={onInputChange} />
   
   </>
 ) 
 
+type StoriesState  = Story[];
+type StoriesSetAction = {
+  type: 'SET_STORIES';
+  payload: Story[];
+}
+type StoriesRemoveAction = {
+  type: "REMOVE_STORY";
+  payload: Story;
+}
 
+type StoriesAction = StoriesSetAction | StoriesRemoveAction;
+
+//useReducer
+const storiesReducer = (state:StoriesState,action:StoriesAction) => {
+  switch(action.type){
+    case 'SET_STORIES':
+      return action.payload;
+    case 'REMOVE_STORY':
+      return state.filter((story) => action.payload.objectID !== story.objectID);
+  }
+
+}
 
 const App = () => {
-  const stories = [
+  const initialStories = [
     {
       title: "React",
       url: "https://react.dev/",
@@ -121,12 +144,22 @@ const App = () => {
     },
   ];
   const [searchTerm, setSearchTerm] = useStorageState('search', '');
- 
+  // const [stories, setStories] = React.useState(initialStories);
+  
+  const [stories, dispatchStories] = React.useReducer(storiesReducer, initialStories);
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
     console.log(event.target.value);
   };
-
+  
+  const handleRemoveStory = (item : Story) => {
+    // const newStories = stories.filter((story) => item.objectID !== story.objectID);
+    // setStories(newStories); 
+    dispatchStories({
+      type: 'REMOVE_STORY',
+      payload: item
+    });
+  }
   const filteredStories = stories.filter((story) =>
     story.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -135,9 +168,10 @@ const App = () => {
       {/* <h1>Hello {title}</h1> */}
 
       <h1>Hello {getTitle("React")}</h1>
-      <InputWithLabel id='search' label='Search' value={searchTerm} onInputChange={handleSearch}/>
+      <InputWithLabel id='search' value={searchTerm} onInputChange={handleSearch}>Search:</InputWithLabel>
+      
       <hr />
-      <List list={filteredStories} />
+      <List list={filteredStories} onRemoveItem={handleRemoveStory}/>
     </>
   );
 };
