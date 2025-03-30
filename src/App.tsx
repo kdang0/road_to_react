@@ -136,6 +136,29 @@ type StoriesAction =
   | StoriesFetchInitAction
   | StoriesFetchSuccessAction;
 
+
+type SearchFormProps = ({
+  searchTerm: string;
+  onSearchInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  searchAction: (event: React.FormEvent<HTMLFormElement>) => void;
+})
+const SearchForm = ({searchTerm, onSearchInput, searchAction} : SearchFormProps) => (
+  <form onSubmit={searchAction}>
+        <h1>Hello {getTitle("React")}</h1>
+        <InputWithLabel
+          id="search"
+          value={searchTerm}
+          onInputChange={onSearchInput}
+        >
+          Search:
+        </InputWithLabel>
+
+        <button type="submit" disabled={!searchTerm}>
+          search
+        </button>
+      </form>
+)
+
 const App = () => {
   const [searchTerm, setSearchTerm] = useStorageState("search", "");
   const DUMMY_API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
@@ -223,8 +246,9 @@ const App = () => {
     console.log(event.target.value);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     setUrl(`${DUMMY_API_ENDPOINT}${searchTerm}`);
+    event.preventDefault();
   };
 
   const handleRemoveStory = (item: Story) => {
@@ -242,19 +266,21 @@ const App = () => {
   return (
     <>
       {/* <h1>Hello {title}</h1> */}
+      {/* <form onSubmit={handleSubmit}>
+        <h1>Hello {getTitle("React")}</h1>
+        <InputWithLabel
+          id="search"
+          value={searchTerm}
+          onInputChange={handleSearch}
+        >
+          Search:
+        </InputWithLabel>
 
-      <h1>Hello {getTitle("React")}</h1>
-      <InputWithLabel
-        id="search"
-        value={searchTerm}
-        onInputChange={handleSearch}
-      >
-        Search:
-      </InputWithLabel>
-
-      <button type="button" disabled={!searchTerm} onClick={handleSubmit}>
-        search
-      </button>
+        <button type="submit" disabled={!searchTerm}>
+          search
+        </button>
+      </form> */}
+      <SearchForm searchTerm={searchTerm} onSearchInput={handleSearch} searchAction={handleSubmit}/> 
 
       <hr />
       {stories.isLoading ? (
