@@ -1,11 +1,91 @@
 import "./App.css";
 import * as React from "react";
 import axios from "axios";
+import styled from "styled-components";
+import Check from './check.svg?react'
 // const title = "React";
 // const welcome = {
 //   greeting: 'Hey',
 //   title: 'React'
 // }
+
+interface Props {
+  width: string; 
+}
+
+const StyledContainer = styled.div`
+  height: 100vw;
+  padding: 20px;
+
+  background: #83a4d4;
+  background: linear-gradient(to left, #b6fbff, #83a4d4);
+`;
+
+const StyledHeadlinePrimary = styled.h1`
+  font-size: 48px;
+  font-weight: 300;
+  letter-spacing: 2px;
+`;
+
+const StyledItem = styled.li`
+ display: flex;
+ align-items: center;
+ padding-bottom: 5px;
+`;
+
+const StyledColumn = styled.span<Props>`
+  padding: 0 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  a{
+    color: inherit;
+  }
+  width: ${(props) => props.width};
+`;
+const StyledButton = styled.button`
+  background: transparent;
+  border: 1px solid #171212;
+  padding: 5px;
+  cursor: pointer;
+  transition: all 0.1s ease-in;
+
+  &:hover{
+    background: #171212;
+    color: #ffffff;
+  }
+`;
+
+const StyledButtonSmall = styled(StyledButton)`
+  padding: 5px;
+`;
+const StyledButtonLarge = styled(StyledButton)`
+  padding: 10px;
+`;
+const StyledSearchForm = styled.form`
+  padding: 10px 0 20px 0;
+  display: flex;
+  align-items: baseline;
+`;
+
+
+const StyledLabel = styled.label`
+  border-top: 1px solid #171212;
+  border-left: 1px solid #171212;
+  padding-left: 5px;
+  font-size: 24px;
+`
+
+const StyledInput = styled.input`
+  border: none;
+  border-bottom: 1px solid #171212;
+  background-color: transparent;
+  font-size: 24px;
+`
+
+
 
 function getTitle(title: string) {
   return title;
@@ -35,28 +115,33 @@ type ListProps = {
   onRemoveItem: (item: Story) => void;
 };
 //creating list component
-const List = ({ list, onRemoveItem }: ListProps) => (
-  <ul>
+const List = React.memo(({ list, onRemoveItem }: ListProps) => {
+  console.log('B:List');
+  return(
+    <ul>
     {list.map((item) => (
       <Item key={item.objectID} onRemoveItem={onRemoveItem} item={item} />
     ))}
   </ul>
-);
+  )
+});
 
 //creating item component
 const Item = ({ item, onRemoveItem }: ItemProps) => {
   return (
-    <li>
-      <span>
+    <StyledItem>
+      <StyledColumn width="40%">
         <a href={item.url}>{item.title}</a>
-      </span>
-      <span>{item.author}</span>
-      <span>{item.num_comments}</span>
-      <span>{" Points: " + item.points}</span>
-      <button type="button" onClick={() => onRemoveItem(item)}>
-        Dismiss
-      </button>
-    </li>
+      </StyledColumn>
+      <StyledColumn width='30%'>{item.author}</StyledColumn>
+      <StyledColumn width='10%'>{item.num_comments}</StyledColumn>
+      <StyledColumn width='10%'>{" Points: " + item.points}</StyledColumn>
+      <StyledColumn width='10%'>
+        <StyledButtonSmall type="button" onClick={() => onRemoveItem(item)}>
+          <Check height="18px" width="18px"/>
+        </StyledButtonSmall>
+      </StyledColumn>
+    </StyledItem>
   );
 };
 
@@ -75,11 +160,18 @@ const Item = ({ item, onRemoveItem }: ItemProps) => {
 
 //creating custom hook
 const useStorageState = (key: string, initialState: string) => {
+  const isMounted = React.useRef<boolean>(false);
+
   const [value, setValue] = React.useState(
     localStorage.getItem(key) || initialState
   );
   React.useEffect(() => {
-    localStorage.setItem(key, value);
+    if(!isMounted.current){
+      isMounted.current = true;
+    } else{
+      console.log("A");
+      localStorage.setItem(key, value);
+    }
   }, [key, value]);
   return [value, setValue] as const;
 };
@@ -92,6 +184,9 @@ type InputWithLabelProps = {
   type?: string;
   onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
+
+
+//INPUT LABEL
 const InputWithLabel = ({
   id,
   children,
@@ -100,9 +195,9 @@ const InputWithLabel = ({
   onInputChange,
 }: InputWithLabelProps) => (
   <>
-    <label htmlFor={id}>{children}</label>
+    <StyledLabel htmlFor={id}>{children}</StyledLabel>
     &nbsp;
-    <input type={type} id={id} value={value} onChange={onInputChange} />
+    <StyledInput type={type} id={id} value={value} onChange={onInputChange} />
   </>
 );
 
@@ -129,6 +224,7 @@ type StoriesFetchFailureAction = {
   type: "STORIES_FETCH_FAILURE";
 };
 
+
 type StoriesAction =
   | StoriesSetAction
   | StoriesRemoveAction
@@ -136,28 +232,32 @@ type StoriesAction =
   | StoriesFetchInitAction
   | StoriesFetchSuccessAction;
 
-
-type SearchFormProps = ({
+type SearchFormProps = {
   searchTerm: string;
   onSearchInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
   searchAction: (event: React.FormEvent<HTMLFormElement>) => void;
-})
-const SearchForm = ({searchTerm, onSearchInput, searchAction} : SearchFormProps) => (
-  <form onSubmit={searchAction}>
-        <h1>Hello {getTitle("React")}</h1>
-        <InputWithLabel
-          id="search"
-          value={searchTerm}
-          onInputChange={onSearchInput}
-        >
-          Search:
-        </InputWithLabel>
+};
 
-        <button type="submit" disabled={!searchTerm}>
-          search
-        </button>
-      </form>
-)
+//SEARCH FORM
+const SearchForm = ({
+  searchTerm,
+  onSearchInput,
+  searchAction,
+}: SearchFormProps) => (
+  <StyledSearchForm onSubmit={searchAction}>
+    <InputWithLabel
+      id="search"
+      value={searchTerm}
+      onInputChange={onSearchInput}
+    >
+      Search:
+    </InputWithLabel>
+
+    <StyledButtonLarge type="submit" disabled={!searchTerm}>
+      search
+    </StyledButtonLarge>
+  </StyledSearchForm>
+);
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useStorageState("search", "");
@@ -202,7 +302,6 @@ const App = () => {
       payload: res.data.hits,
     });
   }, [url]);
-
   //loading up data using useEffect
   React.useEffect(() => {
     handleStories();
@@ -251,20 +350,22 @@ const App = () => {
     event.preventDefault();
   };
 
-  const handleRemoveStory = (item: Story) => {
+  const handleRemoveStory = React.useCallback((item: Story) => {
     // const newStories = stories.filter((story) => item.objectID !== story.objectID);
     // setStories(newStories);
     dispatchStories({
       type: "REMOVE_STORY",
       payload: item,
     });
-  };
+  }, []);
   // const filteredStories = stories.data.filter((story) =>
   //   story.title.toLowerCase().includes(searchTerm.toLowerCase())
   // );
 
+  console.log('App:B');
+
   return (
-    <>
+    <StyledContainer>
       {/* <h1>Hello {title}</h1> */}
       {/* <form onSubmit={handleSubmit}>
         <h1>Hello {getTitle("React")}</h1>
@@ -280,15 +381,20 @@ const App = () => {
           search
         </button>
       </form> */}
-      <SearchForm searchTerm={searchTerm} onSearchInput={handleSearch} searchAction={handleSubmit}/> 
+      <StyledHeadlinePrimary>Hello {getTitle("React")}</StyledHeadlinePrimary>
+      <SearchForm
+        searchTerm={searchTerm}
+        onSearchInput={handleSearch}
+        searchAction={handleSubmit}
+      />
 
-      <hr />
+      
       {stories.isLoading ? (
         <p>Loading...</p>
       ) : (
         <List list={stories.data} onRemoveItem={handleRemoveStory} />
       )}
-    </>
+    </StyledContainer>
   );
 };
 
